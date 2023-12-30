@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34407.89
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Discord.Net.Oauth", "Discord.Net.Oauth\Discord.Net.Oauth.csproj", "{0E110010-2688-4A6C-81D4-02F7594A0424}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Discord.Net.Oauth", "src\Discord.Net.Oauth\Discord.Net.Oauth.csproj", "{0E110010-2688-4A6C-81D4-02F7594A0424}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
