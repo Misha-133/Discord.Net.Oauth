@@ -1,5 +1,5 @@
 ﻿using System.Net.Http.Json;
-
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -74,9 +74,14 @@ public class DiscordOauthClient : IAsyncDisposable, IDisposable
             new ("client_secret", clientSecret),
         ]);
 
-        var res = await SendFormBodyAsync<Api.AccessTokenModel>(body, "oauth2/token", cancellationToken);
+		var response = await SendFormBodyAsync(body, "oauth2/token", cancellationToken).ConfigureAwait(false);
+		var model = await JsonSerializer.DeserializeAsync(await response.Content.ReadAsStreamAsync(cancellationToken ?? CancellationToken.None),
+			SourceGenerationContext.Default.AccessTokenModel,
+			cancellationToken ?? CancellationToken.None);
 
-        return res is not null ? new AccessTokenResponse(res) : default;
+		return model is null
+			? default
+			: new AccessTokenResponse(model);
     }
 
     /// <summary>
@@ -99,11 +104,14 @@ public class DiscordOauthClient : IAsyncDisposable, IDisposable
             new ("client_secret", clientSecret),
         ]);
 
-        var response = await SendFormBodyAsync<Api.AccessTokenModel>(body, "oauth2/token", cancellationToken).ConfigureAwait(false);
+		var response = await SendFormBodyAsync(body, "oauth2/token", cancellationToken).ConfigureAwait(false);
+		var model = await JsonSerializer.DeserializeAsync(await response.Content.ReadAsStreamAsync(cancellationToken ?? CancellationToken.None),
+			SourceGenerationContext.Default.AccessTokenModel,
+			cancellationToken ?? CancellationToken.None);
 
-        return response is null
-            ? default
-            : new AccessTokenResponse(response);
+		return model is null
+			? default
+			: new AccessTokenResponse(model);
     }
 
     /// <summary>
@@ -136,11 +144,14 @@ public class DiscordOauthClient : IAsyncDisposable, IDisposable
             new ("client_secret", clientSecret),
         ]);
 
-        var response = await SendFormBodyAsync<Api.AccessTokenModel>(body, "oauth2/token", cancellationToken).ConfigureAwait(false);
+        var response = await SendFormBodyAsync(body, "oauth2/token", cancellationToken).ConfigureAwait(false);
+		var model = await JsonSerializer.DeserializeAsync(await response.Content.ReadAsStreamAsync(cancellationToken ?? CancellationToken.None),
+			SourceGenerationContext.Default.AccessTokenModel,
+			cancellationToken ?? CancellationToken.None);
 
-        return response is null
+        return model is null
             ? default
-            : new AccessTokenResponse(response);
+            : new AccessTokenResponse(model);
     }
 
     /// <summary>
@@ -171,9 +182,9 @@ public class DiscordOauthClient : IAsyncDisposable, IDisposable
         return SendAsync(body, "oauth2/token/revoke", cancellationToken);
     }
 
-    internal async Task<T?> SendFormBodyAsync<T>(FormUrlEncodedContent body, string route, CancellationToken? cancellationToken = default)
+    internal async Task<HttpResponseMessage> SendFormBodyAsync(FormUrlEncodedContent body, string route, CancellationToken? cancellationToken = default)
     {
-        using var response = await _httpClient.PostAsync(route, body, cancellationToken: cancellationToken ?? CancellationToken.None).ConfigureAwait(false);
+        var response = await _httpClient.PostAsync(route, body, cancellationToken: cancellationToken ?? CancellationToken.None).ConfigureAwait(false);
         try
         {
             response.EnsureSuccessStatusCode();
@@ -183,8 +194,8 @@ public class DiscordOauthClient : IAsyncDisposable, IDisposable
             _logger.LogWarning(ex, "Server responded with {Code}", response.StatusCode);
         }
 
-        return await response.Content.ReadFromJsonAsync<T>(DiscordOauthConfig.SerializerOptions, cancellationToken ?? CancellationToken.None);
-    }
+        return response;
+	}
 
     internal async Task<bool> SendAsync(FormUrlEncodedContent body, string route, CancellationToken? cancellationToken = default)
     {
