@@ -1,0 +1,51 @@
+name: Nightly Push
+
+on:
+  push:
+    branches: [master]
+    
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Get current date
+      id: date
+      run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+        
+    - name: Wait for build to succeed
+      uses: lewagon/wait-on-check-action@v1.3.3
+      with:
+        ref: ${{ github.ref }}
+        check-name: 'Build Project'
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        wait-interval: 10
+        
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+        source-url: https://nuget.pkg.github.com/Misha-133/index.json
+      env:
+        NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --no-restore -c Release      
+      
+    - name: Pack
+      env:
+        VERSION_SUFFIX: nightly-${{ github.run_number }}-${{ steps.date.outputs.date }}
+      run: dotnet pack "src/Discord.Net.Oauth/Discord.Net.Oauth.csproj" --no-restore --no-build --verbosity minimal --version-suffix $VERSION_SUFFIX
+
+    - name: Push personal repo
+      run: dotnet nuget push "src/Discord.Net.Oauth/bin/Release/*.nupkg" -k ${{secrets.PersonalFeedKey}} -s https://nuget.misha133.ru/v3/index.json
+    
+    - name: Push nightly      
+      run: dotnet nuget push "src/Discord.Net.Oauth/bin/Release/*.nupkg"
