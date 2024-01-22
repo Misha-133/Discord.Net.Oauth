@@ -19,7 +19,10 @@ public sealed class AccessTokenResponse
 
 	public int ExpiresIn { get; }
 
-	public string RefreshToken { get; }
+	/// <summary>
+	///		Gets the refresh token. <see langword="null" /> if the response is a client credentials access token.
+	/// </summary>
+	public string? RefreshToken { get; }
 
 	public string[] Scopes { get; }
 }
