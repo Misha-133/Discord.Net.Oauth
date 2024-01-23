@@ -19,12 +19,11 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>discord oauth; oauth; discord; dotnet</PackageTags>
     <Copyright>MIT License</Copyright>
-    <AssemblyVersion>1.0.1</AssemblyVersion>
-    <FileVersion>1.0.1</FileVersion>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <IncludeSymbols>False</IncludeSymbols>
-    <Version>1.0.1</Version>
     <GenerateAssemblyInfo>True</GenerateAssemblyInfo>
+
+    <VersionPrefix>1.0.1</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>
