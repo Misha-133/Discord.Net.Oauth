@@ -52,7 +52,7 @@ public class DiscordOauthClient : IAsyncDisposable, IDisposable
     /// </returns>
     /// <exception cref="ArgumentNullException"></exception>
 	/// <exception cref="HttpRequestException"></exception>
-    public async Task<AccessTokenResponse?> ExchangeCodeAsync(string code, string redirectUri, ulong clientId, string clientSecret, CancellationToken? cancellationToken = default)
+    public async Task<AccessTokenResponse?> ExchangeCodeAsync(string code, string redirectUri, ulong clientId, string clientSecret, string? codeVerifier = null, CancellationToken? cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(code))
             throw new ArgumentNullException(nameof(code));
@@ -66,14 +66,19 @@ public class DiscordOauthClient : IAsyncDisposable, IDisposable
         if (string.IsNullOrWhiteSpace(clientSecret))
             throw new ArgumentNullException(nameof(clientSecret));
 
-        var body = new FormUrlEncodedContent([
-            new ("grant_type", "authorization_code"),
-            new ("code", code),
-            new ("redirect_uri", redirectUri),
-            new ("client_id", clientId.ToString()),
-            new ("client_secret", clientSecret),
-        ]);
+        var items = new List<KeyValuePair<string?, string?>>
+		{
+			new ("grant_type", "authorization_code"),
+			new ("code", code),
+			new ("redirect_uri", redirectUri),
+			new ("client_id", clientId.ToString()),
+			new ("client_secret", clientSecret),
+		};
 
+        if (!string.IsNullOrWhiteSpace(codeVerifier))
+			items.Add(new("code_verifier", codeVerifier));
+
+        var body = new FormUrlEncodedContent(items);
 		var response = await SendFormBodyAsync(body, "oauth2/token", cancellationToken).ConfigureAwait(false);
 		var model = await JsonSerializer.DeserializeAsync(await response.Content.ReadAsStreamAsync(cancellationToken ?? CancellationToken.None),
 			SourceGenerationContext.Default.AccessTokenModel,
@@ -185,6 +190,8 @@ public class DiscordOauthClient : IAsyncDisposable, IDisposable
     internal async Task<HttpResponseMessage> SendFormBodyAsync(FormUrlEncodedContent body, string route, CancellationToken? cancellationToken = default)
     {
         var response = await _httpClient.PostAsync(route, body, cancellationToken: cancellationToken ?? CancellationToken.None).ConfigureAwait(false);
+
+		var r = await response.Content.ReadAsStringAsync();
         try
         {
             response.EnsureSuccessStatusCode();

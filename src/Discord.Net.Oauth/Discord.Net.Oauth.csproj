@@ -23,7 +23,7 @@
     <IncludeSymbols>False</IncludeSymbols>
     <GenerateAssemblyInfo>True</GenerateAssemblyInfo>
 
-    <VersionPrefix>1.0.1</VersionPrefix>
+    <VersionPrefix>1.0.2</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>
